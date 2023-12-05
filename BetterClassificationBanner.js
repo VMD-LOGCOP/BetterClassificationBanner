@@ -32,7 +32,8 @@ define(['qlik', 'jquery', 'css!./styles.css', 'text!./index.html'], function (
     ];
 
     function render(layout) {
-        const { presetOptions, title, height, fontSize } = layout.appearance;
+        const { presetOptions, title, height, fontSize, customStyles } =
+            layout.appearance;
 
         const customCss = [];
 
@@ -75,6 +76,10 @@ define(['qlik', 'jquery', 'css!./styles.css', 'text!./index.html'], function (
                     font-size: 1rem !important;
                 }
             `);
+        }
+
+        if (customStyles) {
+            customCss.push(customStyles);
         }
 
         for (const css of customCss) {
@@ -140,6 +145,14 @@ define(['qlik', 'jquery', 'css!./styles.css', 'text!./index.html'], function (
                             label: 'Height (px)',
                             type: 'number',
                             defaultValue: 24,
+                        },
+                        customStyles: {
+                            ref: 'appearance.customStyles',
+                            label: 'Custom CSS (need to refresh)',
+                            type: 'string',
+                            component: 'textarea',
+                            expression: 'optional',
+                            defaultValue: '',
                         },
                     },
                 },
