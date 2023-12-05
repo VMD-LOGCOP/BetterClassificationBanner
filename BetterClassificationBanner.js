@@ -1,4 +1,9 @@
-define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
+define(['qlik', 'jquery', 'css!./styles.css', 'text!./index.html'], function (
+    qlik,
+    $,
+    styles,
+    html
+) {
     const classifications = [
         {
             label: 'Unclassified',
@@ -27,7 +32,10 @@ define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
     ];
 
     function render(layout) {
-        const { presetOptions, title } = layout.appearance;
+        const { presetOptions, title, height, fontSize } = layout.appearance;
+
+        const customCss = [];
+
         if (presetOptions) {
             classifications.forEach((classification) =>
                 $('body').removeClass(classification.value.className)
@@ -36,13 +44,61 @@ define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
             $('body').addClass(presetOptions.className);
         }
 
-        if (title) {
-            const css = `body:before { content: '${title}' !important; }`;
+        if (title)
+            customCss.push(`body:before { content: '${title}' !important; }`);
+
+        if (height) {
+            customCss.push(`
+                body:before { 
+                    height: ${height}px !important;
+                    line-height: ${height}px !important;
+                }
+            `);
+        } else {
+            customCss.push(`
+                body:before { 
+                    height: 2rem !important;
+                    line-height: 2rem !important;
+                }
+            `);
+        }
+
+        if (fontSize) {
+            customCss.push(`
+                body:before { 
+                    font-size: ${fontSize}px !important;
+                }
+            `);
+        } else {
+            customCss.push(`
+                body:before { 
+                    font-size: 1rem !important;
+                }
+            `);
+        }
+
+        for (const css of customCss) {
             $('<style>').html(css).appendTo('head');
         }
+
+        // Hide object when not in edit mode
+        const classificationBannerObject = $('#classification-banner')
+            .parent()
+            .parent()
+            .parent()
+            .parent()
+            .parent()
+            .parent()
+            .parent()
+            .parent();
+
+        const visibility =
+            qlik.navigation.getMode() === 'edit' ? 'visible' : 'hidden';
+        classificationBannerObject.css('visibility', visibility);
     }
 
     return {
+        template: html,
         support: {
             snapshot: true,
             export: true,
@@ -59,7 +115,7 @@ define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
                         presetOptions: {
                             ref: 'appearance.presetOptions',
                             component: 'dropdown',
-                            label: 'Presets:',
+                            label: 'Presets',
                             type: 'object',
                             defaultValue: {
                                 className: 'unclassified',
@@ -69,9 +125,21 @@ define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
                         },
                         title: {
                             ref: 'appearance.title',
-                            label: 'Banner Title:',
+                            label: 'Banner Title',
                             type: 'string',
                             defaultValue: '',
+                        },
+                        fontSize: {
+                            ref: 'appearance.fontSize',
+                            label: 'Font size (px)',
+                            type: 'number',
+                            defaultValue: 16,
+                        },
+                        height: {
+                            ref: 'appearance.height',
+                            label: 'Height (px)',
+                            type: 'number',
+                            defaultValue: 24,
                         },
                     },
                 },
@@ -82,6 +150,12 @@ define(['qlik', 'jquery', 'css!./styles.css'], function (qlik, $, styles) {
             // $element.html('BetterClassificationBanner');
             // needed for export
             render(layout);
+
+            const visibility =
+                qlik.navigation.getMode() === 'edit' ? 'visible' : 'hidden';
+            $element.css('visibility', visibility);
+
+            console.log('$element: ', $element);
             return qlik.Promise.resolve();
         },
 
